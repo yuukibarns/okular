@@ -33,6 +33,9 @@ namespace GuiUtils
 QString captionForAnnotation(const Okular::Annotation *annotation);
 QString authorForAnnotation(const Okular::Annotation *annotation);
 
+// Returns the icon of the given @p annotation.
+QIcon iconForAnnotation(const Okular::Annotation *ann);
+
 QString contentsHtml(const Okular::Annotation *annotation);
 
 QString prettyToolTip(const Okular::Annotation *annotation);

@@ -45,13 +45,21 @@ QString captionForAnnotation(const Okular::Annotation *ann)
         break;
     case Okular::Annotation::ALine:
         if ((static_cast<const Okular::LineAnnotation *>(ann))->linePoints().count() == 2) {
-            ret = hasComment ? i18n("Straight Line with Comment") : i18n("Straight Line");
+            if ((static_cast<const Okular::LineAnnotation *>(ann))->lineEndStyle() == Okular::LineAnnotation::OpenArrow) {
+                ret = hasComment ? i18n("Arrow with Comment") : i18n("Arrow");
+            } else {
+                ret = hasComment ? i18n("Straight Line with Comment") : i18n("Straight Line");
+            }
         } else {
             ret = hasComment ? i18n("Polygon with Comment") : i18n("Polygon");
         }
         break;
     case Okular::Annotation::AGeom:
-        ret = hasComment ? i18n("Geometry with Comment") : i18n("Geometry");
+        if ((static_cast<const Okular::GeomAnnotation *>(ann))->geometricalType() == Okular::GeomAnnotation::InscribedSquare) {
+            ret = hasComment ? i18n("Rectangle with Comment") : i18n("Rectangle");
+        } else {
+            ret = hasComment ? i18n("Ellipse with Comment") : i18n("Ellipse");
+        }
         break;
     case Okular::Annotation::AHighlight:
         switch ((static_cast<const Okular::HighlightAnnotation *>(ann))->highlightType()) {
@@ -107,6 +115,92 @@ QString authorForAnnotation(const Okular::Annotation *ann)
     Q_ASSERT(ann);
 
     return !ann->author().isEmpty() ? ann->author() : i18nc("Unknown author", "Unknown");
+}
+
+// Icon selection must match the annotation toolbar icons in AnnotationActionHandler
+QIcon iconForAnnotation(const Okular::Annotation *ann)
+{
+    Q_ASSERT(ann);
+
+    switch (ann->subType()) {
+    case Okular::Annotation::AText:
+        if ((static_cast<const Okular::TextAnnotation *>(ann))->textType() == Okular::TextAnnotation::Linked) {
+            return QIcon::fromTheme(QStringLiteral("edit-comment")); // Pop-up Note
+        } else {
+            if ((static_cast<const Okular::TextAnnotation *>(ann))->inplaceIntent() == Okular::TextAnnotation::TypeWriter) {
+                return QIcon::fromTheme(QStringLiteral("tool-text")); // Typewriter
+            } else {
+                return QIcon::fromTheme(QStringLiteral("note")); // Inline Note
+            }
+        }
+        break;
+    case Okular::Annotation::ALine:
+        if ((static_cast<const Okular::LineAnnotation *>(ann))->linePoints().count() == 2) {
+            if ((static_cast<const Okular::LineAnnotation *>(ann))->lineEndStyle() == Okular::LineAnnotation::OpenArrow) {
+                return QIcon::fromTheme(QStringLiteral("draw-arrow")); // Arrow
+            } else {
+                return QIcon::fromTheme(QStringLiteral("draw-line")); // Straight Line
+            }
+        } else {
+            return QIcon::fromTheme(QStringLiteral("draw-polyline")); // Polygon
+        }
+        break;
+    case Okular::Annotation::AGeom:
+        if ((static_cast<const Okular::GeomAnnotation *>(ann))->geometricalType() == Okular::GeomAnnotation::InscribedSquare) {
+            return QIcon::fromTheme(QStringLiteral("draw-rectangle")); // Rectangle
+        } else {
+            return QIcon::fromTheme(QStringLiteral("draw-ellipse")); // Ellipse
+        }
+        break;
+    case Okular::Annotation::AHighlight:
+        switch ((static_cast<const Okular::HighlightAnnotation *>(ann))->highlightType()) {
+        case Okular::HighlightAnnotation::Highlight:
+            return QIcon::fromTheme(QStringLiteral("draw-highlight")); // Highlight
+            break;
+        case Okular::HighlightAnnotation::Squiggly:
+            return QIcon::fromTheme(QStringLiteral("format-text-underline-squiggle")); // Squiggle
+            break;
+        case Okular::HighlightAnnotation::Underline:
+            return QIcon::fromTheme(QStringLiteral("format-text-underline")); // Underline
+            break;
+        case Okular::HighlightAnnotation::StrikeOut:
+            return QIcon::fromTheme(QStringLiteral("format-text-strikethrough")); // Strike Out
+            break;
+        }
+        break;
+    case Okular::Annotation::AStamp:
+        return QIcon::fromTheme(QStringLiteral("tag")); // Stamp
+        break;
+    case Okular::Annotation::AInk:
+        return QIcon::fromTheme(QStringLiteral("draw-freehand")); // Freehand Line
+        break;
+    case Okular::Annotation::ACaret:
+        return QIcon::fromTheme(QStringLiteral("text-cursor")); // Caret
+        break;
+    case Okular::Annotation::AFileAttachment:
+        return QIcon::fromTheme(QStringLiteral("mail-attachment")); // File Attachment
+        break;
+    case Okular::Annotation::ASound:
+        return QIcon::fromTheme(QStringLiteral("audio-x-generic")); // Sound
+        break;
+    case Okular::Annotation::AMovie:
+        return QIcon::fromTheme(QStringLiteral("video-x-generic")); // Movie
+        break;
+    case Okular::Annotation::AScreen:
+        return QIcon::fromTheme(QStringLiteral("video-display")); // Screen
+        break;
+    case Okular::Annotation::AWidget:
+        return QIcon::fromTheme(QStringLiteral("preferences-desktop")); // Widget
+        break;
+    case Okular::Annotation::ARichMedia:
+        return QIcon::fromTheme(QStringLiteral("video-x-generic")); // Rich Media (same as movie)
+        break;
+    case Okular::Annotation::A_BASE:
+        break;
+    }
+
+    // Fallback icon
+    return QIcon::fromTheme(QStringLiteral("okular"));
 }
 
 QString contentsHtml(const Okular::Annotation *ann)
