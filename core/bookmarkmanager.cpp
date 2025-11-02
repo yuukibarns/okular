@@ -380,8 +380,7 @@ QHash<QUrl, QString>::iterator BookmarkManager::Private::bookmarkFind(const QUrl
         if (!found && doCreate) {
             // folder not found :(
             // then, in a single step create a new folder and add it in our cache :)
-            QString purl = url.isLocalFile() ? url.toLocalFile() : url.toDisplayString();
-            KBookmarkGroup newbg = root.createNewFolder(purl);
+            KBookmarkGroup newbg = root.createNewFolder(url.fileName());
             newbg.setUrl(url);
             it = knownFiles.insert(url, newbg.address());
             if (result) {
