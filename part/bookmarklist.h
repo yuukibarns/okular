@@ -46,6 +46,12 @@ private Q_SLOTS:
     void slotContextMenu(const QPoint p);
     void slotBookmarksChanged(const QUrl &url);
 
+Q_SIGNALS:
+    /**
+     * The bookmark list is requesting to open the specified @p url.
+     */
+    void openUrl(const QUrl &url);
+
 private:
     void rebuildTree(bool showAll);
     void goTo(BookmarkItem *item);

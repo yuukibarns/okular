@@ -409,6 +409,7 @@ Part::Part(QObject *parent, const QVariantList &args)
 
     // [left toolbox: Bookmarks] | []
     m_bookmarkList = new BookmarkList(m_document, nullptr);
+    connect(m_bookmarkList, &BookmarkList::openUrl, this, &Part::handleUrlFromBookmarkList);
     m_sidebar->addItem(m_bookmarkList, QIcon::fromTheme(QStringLiteral("bookmarks")), i18n("Bookmarks"));
 
     // [left toolbox optional item: Signature Panel] | []
@@ -1176,6 +1177,11 @@ void Part::openUrlFromBookmarks(const QUrl &_url)
     }
 }
 
+void Part::handleUrlFromBookmarkList(const QUrl &_url)
+{
+    Q_EMIT openUrlFromBookmarkList(_url);
+}
+
 void Part::handleDroppedUrls(const QList<QUrl> &urls)
 {
     if (urls.isEmpty()) {
@@ -1787,27 +1793,32 @@ bool Part::openUrl(const QUrl &_url, bool swapInsteadOfOpening)
     if (url.hasFragment()) {
         m_urlWithFragment = _url;
         const QString dest = url.fragment(QUrl::FullyDecoded);
-        bool ok = true;
-        int page = dest.toInt(&ok);
+        const Okular::DocumentViewport viewport = Okular::DocumentViewport(dest);
+        if (viewport.isValid()) {
+            m_document->setNextDocumentViewport(viewport);
+        } else {
+            bool ok = true;
+            int page = dest.toInt(&ok);
 
-        if (!ok) {
-            const QList<QStringView> parameters = QStringView(dest).split(QLatin1Char('&'));
-            for (const QStringView parameter : parameters) {
-                if (parameter.startsWith(QLatin1String("page="), Qt::CaseInsensitive)) {
-                    page = QStringView(dest).mid(5).toInt(&ok);
+            if (!ok) {
+                const QList<QStringView> parameters = QStringView(dest).split(QLatin1Char('&'));
+                for (const QStringView parameter : parameters) {
+                    if (parameter.startsWith(QLatin1String("page="), Qt::CaseInsensitive)) {
+                        page = QStringView(dest).mid(5).toInt(&ok);
+                    }
                 }
             }
-        }
 
-        if (ok) {
-            Okular::DocumentViewport vp(page - 1);
-            vp.rePos.enabled = true;
-            vp.rePos.normalizedX = 0;
-            vp.rePos.normalizedY = 0;
-            vp.rePos.pos = Okular::DocumentViewport::TopLeft;
-            m_document->setNextDocumentViewport(vp);
-        } else {
-            m_document->setNextDocumentDestination(dest);
+            if (ok) {
+                Okular::DocumentViewport vp(page - 1);
+                vp.rePos.enabled = true;
+                vp.rePos.normalizedX = 0;
+                vp.rePos.normalizedY = 0;
+                vp.rePos.pos = Okular::DocumentViewport::TopLeft;
+                m_document->setNextDocumentViewport(vp);
+            } else {
+                m_document->setNextDocumentDestination(dest);
+            }
         }
         url.setFragment(QString());
     } else {

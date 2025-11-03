@@ -401,8 +401,7 @@ void BookmarkList::goTo(BookmarkItem *item)
     if (item->url() == m_document->currentDocument()) {
         m_document->setViewport(item->viewport(), nullptr, true);
     } else {
-        Okular::GotoAction action(item->url().toDisplayString(QUrl::PreferLocalFile), item->viewport());
-        m_document->processAction(&action);
+        Q_EMIT openUrl(item->bookmark().url());
     }
 }
 
